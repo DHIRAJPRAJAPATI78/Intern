@@ -1,13 +1,18 @@
 import { useEffect, useState, useRef } from "react";
 import { Menu, X, Bell, Moon } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { logoutUser } from "../features/authSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const user = null;
+  const { loading } = useSelector((state) => state.user); 
+  const user = true;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -19,7 +24,18 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ⭐ Tarot Reader Navigation Links
+  const handleLogout = async () => {
+    if (loading) return; 
+
+    try {
+      await dispatch(logoutUser()).unwrap();
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
+  //  Tarot Reader Navigation Links
   const navLinks = [
     { name: "About Tarot", href: "/about" },
     { name: "Book Reading", href: "/book" },
@@ -27,16 +43,17 @@ const Header = () => {
     { name: "Horoscope", href: "/horoscope" },
     { name: "Contact", href: "/contact" },
 
-  { name: "My Profile", href: "/profile", type: "mobile" },
-  { name: "My Bookings", href: "/my-bookings", type: "mobile" },
-  { name: "Settings", href: "/settings", type: "mobile" },
-  { name: "Logout", href: "/logout", type: "mobile" },
+    { name: "My Profile", href: "/profile", type: "mobile" },
+    { name: "My Bookings", href: "/my-bookings", type: "mobile" },
+    { name: "Settings", href: "/settings", type: "mobile" },
+
+    // Mobile Logout item
+    { name: "Logout", href: "", type: "mobile", logout: true },
   ];
 
   return (
     <header className="fixed top-0 left-0 w-full h-16 bg-black/80 backdrop-blur-md border-b border-gray-800 z-50 shadow-md">
       <div className="max-w-7xl mx-auto px-5 h-full flex items-center justify-between">
-
         {/* Logo */}
         <Link
           to="/"
@@ -94,8 +111,18 @@ const Header = () => {
                       <li className="px-4 py-2 hover:bg-gray-800 cursor-pointer">
                         Settings
                       </li>
-                      <li className="px-4 py-2 hover:bg-gray-800 cursor-pointer text-red-400">
-                        Logout
+
+                      {/* Logout with loader */}
+                      <li
+                        className={`px-4 py-2 hover:bg-gray-800 cursor-pointer text-red-400 flex items-center gap-2
+                          ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                        onClick={!loading ? handleLogout : undefined}
+                      >
+                        {loading ? (
+                          <span className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></span>
+                        ) : (
+                          "Logout"
+                        )}
                       </li>
                     </ul>
                   </div>
@@ -126,24 +153,30 @@ const Header = () => {
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="md:hidden bg-black/95 border-t border-gray-800 px-5 py-4 flex flex-col space-y-4 text-gray-300">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.href}
-              className="hover:text-white transition duration-200"
-              onClick={() => setMenuOpen(false)}
-            >
-              {link.name}
-            </Link>
-          ))}
-
-          {!user && (
-            <Link
-              to="/login"
-              className="px-6 py-3 bg-purple-600 rounded-lg font-semibold text-white hover:scale-105 transition-transform duration-300 shadow-lg shadow-purple-800/30"
-            >
-              Login
-            </Link>
+          {navLinks.map((link) =>
+            link.logout ? (
+              <button
+                key={link.name}
+                onClick={handleLogout}
+                disabled={loading}
+                className="text-left text-red-400"
+              >
+                {loading ? (
+                  <span className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin inline-block"></span>
+                ) : (
+                  "Logout"
+                )}
+              </button>
+            ) : (
+              <Link
+                key={link.name}
+                to={link.href}
+                className="hover:text-white transition duration-200"
+                onClick={() => setMenuOpen(false)}
+              >
+                {link.name}
+              </Link>
+            )
           )}
         </div>
       )}

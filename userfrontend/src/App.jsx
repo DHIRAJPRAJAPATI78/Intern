@@ -8,18 +8,22 @@ import ResetPassword from "./components/auth/ResetPassword";
 import Profile from "./components/profile/Profile";
 import Home from "./Home";
 
+import { Toaster } from "react-hot-toast";
+import ChangePassword from "./components/auth/ChangePassword";
+
 function App() {
   return (
     <Provider store={store}>
       <Router>
+        <Toaster position='top-right' />
         <Header />
         <Routes>
           <Route path='/' element={<Home />} />
           <Route path='/login' element={<Login />} />
           <Route path='/forgot-password' element={<ForgotPassword />} />
           <Route path='/resetpassword' element={<ResetPassword />} />
-          <Route path="/profile" element={<Profile />} />
-
+          <Route path='/profile' element={<Profile />} />
+          <Route path='/change-password' element={<ChangePassword />} />
         </Routes>
       </Router>
     </Provider>

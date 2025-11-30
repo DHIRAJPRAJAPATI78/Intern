@@ -1,10 +1,20 @@
-import { useState } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  loginUser,
+  registerUser,
+  clearUserError,
+  clearUserMessage,
+} from "../../features/authSlice";
 import { motion, AnimatePresence } from "framer-motion";
-
-const API = "http://localhost:5000/api/v1/user";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { loading, error, message } = useSelector((state) => state.user);
+
   const [isLogin, setIsLogin] = useState(true);
 
   const [formData, setFormData] = useState({
@@ -23,31 +33,41 @@ export default function Login() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${API}/login`, {
-        email: formData.email,
-        password: formData.password,
-      });
+      await dispatch(
+        loginUser({
+          email: formData.email,
+          password: formData.password,
+        })
+      ).unwrap()
 
-      alert("Login successful");
-      console.log(res.data);
-    } catch (error) {
-      alert(error.response?.data?.message);
+      navigate("/profile");
+    } catch (err) {
+      console.error("Login failed:", err);
     }
   };
 
-  const handleRegister = async (e) => {
+ 
+  const handleRegister = (e) => {
     e.preventDefault();
-    try {
-      const res = await axios.post(`${API}/register`, formData);
-      alert("Registration successful");
-      console.log(res.data);
-    } catch (error) {
-      alert(error.response?.data?.message);
-    }
+    dispatch(registerUser(formData));
   };
+
+  
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      dispatch(clearUserError());
+    }
+
+    if (message) {
+      toast.success(message);
+      dispatch(clearUserMessage());
+    }
+  }, [error, message, dispatch]);
 
   return (
     <div className='min-h-screen flex items-center justify-center bg-black px-4 pt-17'>
@@ -57,7 +77,6 @@ export default function Login() {
         transition={{ duration: 0.6 }}
         className='w-full max-w-3xl bg-[#0c0c0c]/80 backdrop-blur-xl border border-gray-800 rounded-2xl p-10 shadow-[0_0_40px_rgba(0,0,0,0.6)]'
       >
-        {/* Heading */}
         <motion.h1
           key={isLogin ? "login-title" : "register-title"}
           initial={{ opacity: 0, y: -10 }}
@@ -65,13 +84,11 @@ export default function Login() {
           transition={{ duration: 0.5 }}
           className='text-3xl font-bold text-center text-white mb-10'
         >
-          {isLogin ? "Welcome Back " : "Create an Account "}
+          {isLogin ? "Welcome Back" : "Create an Account"}
         </motion.h1>
 
-        {/* Animated Form Switching */}
         <AnimatePresence mode='wait'>
           {isLogin ? (
-   // login form
             <motion.form
               key='login-form'
               initial={{ opacity: 0, x: 40 }}
@@ -86,7 +103,6 @@ export default function Login() {
                 type='email'
                 onChange={handleChange}
               />
-
               <Input
                 name='password'
                 placeholder='Password'
@@ -94,7 +110,10 @@ export default function Login() {
                 onChange={handleChange}
               />
 
-              <SubmitButton label='Login' color='blue' />
+              <SubmitButton
+                label={loading ? "Please wait..." : "Login"}
+                color='blue'
+              />
 
               <div className='text-center mt-4 mb-3'>
                 <a
@@ -106,7 +125,6 @@ export default function Login() {
               </div>
             </motion.form>
           ) : (
-       // register form
             <motion.form
               key='register-form'
               initial={{ opacity: 0, x: -40 }}
@@ -133,7 +151,6 @@ export default function Login() {
                   type='email'
                   onChange={handleChange}
                 />
-
                 <Input
                   name='phoneNo'
                   placeholder='Phone Number'
@@ -147,32 +164,44 @@ export default function Login() {
                   onChange={handleChange}
                 />
 
+                {/* Gender */}
                 <select
                   name='gender'
-                  className='p-3 bg-black border border-gray-700 rounded-lg mt-4 text-gray-400 focus:border-green-500 outline-none'
+                  className='p-3 bg-[#111] border border-gray-700 rounded-lg mt-4 text-gray-300
+                             focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none'
                   onChange={handleChange}
                 >
-                  <option value=''>Gender</option>
-                  <option className='text-white'>Male</option>
-                  <option className='text-white'>Female</option>
-                  <option className='text-white'>Other</option>
+                  <option value=''>Select Gender</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
                 </select>
 
+                {/* DOB */}
                 <Input name='dob' type='date' onChange={handleChange} />
+
+                {/* TIME */}
                 <Input name='birthTime' type='time' onChange={handleChange} />
-                <Input
-                  name='birthPlace'
-                  placeholder='Birth Place'
-                  onChange={handleChange}
-                />
+
+                {/* Birth Place */}
+                <div className='col-span-2'>
+                  <Input
+                    name='birthPlace'
+                    placeholder='Birth Place'
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
 
-              <SubmitButton label='Register' color='green' />
+              <SubmitButton
+                label={loading ? "Please wait..." : "Register"}
+                color='green'
+              />
             </motion.form>
           )}
         </AnimatePresence>
 
-        {/* Already Registered / Login */}
+        {/* -------------------- SWITCH BUTTON -------------------- */}
         <div className='text-center mt-8'>
           {isLogin ? (
             <p className='text-gray-400 text-sm'>
@@ -201,6 +230,7 @@ export default function Login() {
   );
 }
 
+/* -------------------- INPUT COMPONENT -------------------- */
 function Input({ name, type = "text", placeholder, onChange }) {
   return (
     <motion.input
@@ -210,17 +240,21 @@ function Input({ name, type = "text", placeholder, onChange }) {
       name={name}
       placeholder={placeholder}
       onChange={onChange}
-      className='w-full p-3 mt-4 bg-black border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 outline-none'
+      className='w-full p-3 mt-4 bg-[#111] border border-gray-700 rounded-lg text-gray-200
+                 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none'
     />
   );
 }
 
+/* -------------------- BUTTON COMPONENT -------------------- */
 function SubmitButton({ label, color }) {
   return (
     <motion.button
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.95 }}
-      className={`w-full bg-${color}-600 py-3 rounded-lg text-white font-semibold mt-6 hover:bg-${color}-700 transition-all`}
+      className={`w-full bg-${color}-600 py-3 rounded-lg text-white font-semibold mt-6 
+                  hover:bg-${color}-700 transition-all`}
+      type='submit'
     >
       {label}
     </motion.button>

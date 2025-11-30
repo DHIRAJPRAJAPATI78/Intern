@@ -8,6 +8,7 @@ import ResetPassword from "./components/auth/ResetPassword";
 import Profile from "./components/profile/Profile";
 import Home from "./Home";
 
+
 function App() {
   return (
     <Provider store={store}>
@@ -27,3 +28,4 @@ function App() {
 }
 
 export default App;
+
