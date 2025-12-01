@@ -2,14 +2,15 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:3000/user",
+  baseURL: "http://localhost:3000/expert",
   withCredentials: true,
 });
 
-
-// REGISTER
-export const registerUser = createAsyncThunk(
-  "user/register",
+/* 
+ REGISTER EXPERT
+ */
+export const registerExpert = createAsyncThunk(
+  "expert/register",
   async (data, { rejectWithValue }) => {
     try {
       const res = await API.post("/register", data);
@@ -20,10 +21,11 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-
-// LOGIN
-export const loginUser = createAsyncThunk(
-  "user/login",
+/* 
+ LOGIN EXPERT
+ */
+export const loginExpert = createAsyncThunk(
+  "expert/login",
   async (data, { rejectWithValue }) => {
     try {
       const res = await API.post("/login", data);
@@ -34,9 +36,11 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-// LOGOUT
-export const logoutUser = createAsyncThunk(
-  "user/logout",
+/* 
+ LOGOUT EXPERT
+ */
+export const logoutExpert = createAsyncThunk(
+  "expert/logout",
   async (_, { rejectWithValue }) => {
     try {
       const res = await API.post("/logout");
@@ -47,25 +51,31 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
-// GET PROFILE
-export const getUserProfile = createAsyncThunk(
-  "user/getProfile",
-  async (id, { rejectWithValue }) => {
+/* 
+ GET EXPERT PROFILE
+*/
+export const getExpertProfile = createAsyncThunk(
+  "expert/getProfile",
+  async (_, { rejectWithValue }) => {
     try {
-      const res = await API.get(`/profile/${id}`);
-      return res.data.user;
+      const res = await API.get("/profile");
+      return res.data.expert;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Failed to load profile");
     }
   }
 );
 
-// UPDATE PROFILE
-export const updateUserProfile = createAsyncThunk(
-  "user/updateProfile",
-  async ({ id, data }, { rejectWithValue }) => {
+/* 
+UPDATE PROFILE (with images + formData)
+ */
+export const updateExpertProfile = createAsyncThunk(
+  "expert/updateProfile",
+  async (formData, { rejectWithValue }) => {
     try {
-      const res = await API.put(`/profile/update/${id}`, data);
+      const res = await API.put("/profile/update", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Update failed");
@@ -73,12 +83,14 @@ export const updateUserProfile = createAsyncThunk(
   }
 );
 
-// DELETE PROFILE
-export const deleteUserProfile = createAsyncThunk(
-  "user/deleteProfile",
-  async (id, { rejectWithValue }) => {
+/* 
+ DELETE PROFILE (req.expert.id)
+ */
+export const deleteExpertProfile = createAsyncThunk(
+  "expert/deleteProfile",
+  async (_, { rejectWithValue }) => {
     try {
-      const res = await API.delete(`/profile/delete/${id}`);
+      const res = await API.delete("/profile/delete");
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Delete failed");
@@ -86,9 +98,11 @@ export const deleteUserProfile = createAsyncThunk(
   }
 );
 
-// CHANGE PASSWORD
-export const changePassword = createAsyncThunk(
-  "user/changePassword",
+/* 
+ CHANGE PASSWORD
+ */
+export const changeExpertPassword = createAsyncThunk(
+  "expert/changePassword",
   async (data, { rejectWithValue }) => {
     try {
       const res = await API.post("/password/change", data);
@@ -99,182 +113,128 @@ export const changePassword = createAsyncThunk(
   }
 );
 
-// FORGOT PASSWORD
+/* 
+ EXPERT SLICE
+ */
 
-export const forgotPassword = createAsyncThunk(
-  "user/forgotPassword",
-  async ({ email }, { rejectWithValue }) => {
-    try {
-      const res = await API.post("/password/forgot", { email });
-      return res.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Failed to send reset link");
-    }
-  }
-);
-
-//. RESET PASSWORD
-
-export const resetPassword = createAsyncThunk(
-  "user/resetPassword",
-  async ({ id, token, password }, { rejectWithValue }) => {
-    try {
-      const res = await API.post(`/resetpassword/${id}/${token}`, { password });
-      return res.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Password reset failed");
-    }
-  }
-);
-
-
-// slices
-const userSlice = createSlice({
-  name: "user",
+const expertSlice = createSlice({
+  name: "expert",
   initialState: {
     loading: false,
     error: null,
-    user: null,
+    expert: null,
     message: null,
     profile: null,
   },
+
   reducers: {
-    clearUserError: (state) => {
+    clearExpertError: (state) => {
       state.error = null;
     },
-    clearUserMessage: (state) => {
+    clearExpertMessage: (state) => {
       state.message = null;
     },
   },
 
   extraReducers: (builder) => {
     builder
-
       /* REGISTER */
-      .addCase(registerUser.pending, (state) => {
+      .addCase(registerExpert.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(registerExpert.fulfilled, (state, action) => {
         state.loading = false;
         state.message = action.payload.message;
       })
-      .addCase(registerUser.rejected, (state, action) => {
+      .addCase(registerExpert.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
 
       /* LOGIN */
-      .addCase(loginUser.pending, (state) => {
+      .addCase(loginExpert.pending, (state) => {
         state.loading = true;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
+      .addCase(loginExpert.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.expert = action.payload;
       })
-      .addCase(loginUser.rejected, (state, action) => {
+      .addCase(loginExpert.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
 
       /* LOGOUT */
-      .addCase(logoutUser.pending, (state) => {
+      .addCase(logoutExpert.pending, (state) => {
         state.loading = true;
       })
-      .addCase(logoutUser.fulfilled, (state) => {
+      .addCase(logoutExpert.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = null;
-        state.message = "Logged out successfully";
+        state.expert = null;
+        state.message = action.payload.message;
       })
-      .addCase(logoutUser.rejected, (state, action) => {
+      .addCase(logoutExpert.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
 
       /* GET PROFILE */
-      .addCase(getUserProfile.pending, (state) => {
+      .addCase(getExpertProfile.pending, (state) => {
         state.loading = true;
-        state.profile = null;
       })
-      .addCase(getUserProfile.fulfilled, (state, action) => {
+      .addCase(getExpertProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.profile = action.payload;
       })
-      .addCase(getUserProfile.rejected, (state, action) => {
+      .addCase(getExpertProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
 
       /* UPDATE PROFILE */
-      .addCase(updateUserProfile.pending, (state) => {
+      .addCase(updateExpertProfile.pending, (state) => {
         state.loading = true;
       })
-      .addCase(updateUserProfile.fulfilled, (state, action) => {
+      .addCase(updateExpertProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.profile = action.payload.user;
+        state.profile = action.payload.expert;
         state.message = action.payload.message;
       })
-      .addCase(updateUserProfile.rejected, (state, action) => {
+      .addCase(updateExpertProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
 
       /* DELETE PROFILE */
-      .addCase(deleteUserProfile.pending, (state) => {
+      .addCase(deleteExpertProfile.pending, (state) => {
         state.loading = true;
       })
-      .addCase(deleteUserProfile.fulfilled, (state, action) => {
+      .addCase(deleteExpertProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = null;
+        state.expert = null;
         state.profile = null;
         state.message = action.payload.message;
       })
-      .addCase(deleteUserProfile.rejected, (state, action) => {
+      .addCase(deleteExpertProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
 
       /* CHANGE PASSWORD */
-      .addCase(changePassword.pending, (state) => {
+      .addCase(changeExpertPassword.pending, (state) => {
         state.loading = true;
       })
-      .addCase(changePassword.fulfilled, (state, action) => {
+      .addCase(changeExpertPassword.fulfilled, (state, action) => {
         state.loading = false;
         state.message = action.payload.message;
       })
-      .addCase(changePassword.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      /* FORGOT PASSWORD */
-      .addCase(forgotPassword.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(forgotPassword.fulfilled, (state, action) => {
-        state.loading = false;
-        state.message = action.payload.message;
-      })
-      .addCase(forgotPassword.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      /* RESET PASSWORD */
-      .addCase(resetPassword.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(resetPassword.fulfilled, (state, action) => {
-        state.loading = false;
-        state.message = action.payload.message;
-      })
-      .addCase(resetPassword.rejected, (state, action) => {
+      .addCase(changeExpertPassword.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
   },
 });
 
-export const { clearUserError, clearUserMessage } = userSlice.actions;
-
-export default userSlice.reducer;
+export const { clearExpertError, clearExpertMessage } = expertSlice.actions;
+export default expertSlice.reducer;

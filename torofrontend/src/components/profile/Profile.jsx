@@ -1,172 +1,170 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  getUserProfile,
-  updateUserProfile,
-  clearUserError,
-  clearUserMessage,
+  updateExpertProfile,
+  clearExpertError,
+  clearExpertMessage,
 } from "../../features/authSlice";
 
-const Profile = () => {
+const ExpertProfile = () => {
   const dispatch = useDispatch();
-  const { user, profile, loading, error, message } = useSelector(
-    (state) => state.user
+  const { profile, loading, error, message } = useSelector(
+    (state) => state.expert
   );
 
-  const userId = user?._id; 
-
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
     phoneNo: "",
     email: "",
+    bio: "",
+    skills: "",
+    experience: "",
+    language: "",
     gender: "",
-    dob: "",
-    birthTime: "",
-    birthPlace: "",
+    expertise: "",
+    preferredCardType: "",
   });
 
-  // Fetch user profile on mount
-  useEffect(() => {
-    if (userId) {
-      dispatch(getUserProfile(userId));
-    }
-  }, [userId]);
+  const [profilePic, setProfilePic] = useState(null);
+  const [certificates, setCertificates] = useState([]);
 
-  // Update local form when profile loads
+
   useEffect(() => {
     if (profile) {
       setFormData({
-        firstName: profile.firstName || "",
-        lastName: profile.lastName || "",
+        name: profile.name || "",
         phoneNo: profile.phoneNo || "",
         email: profile.email || "",
+        bio: profile.bio || "",
+        skills: (profile.skills || []).join(", "),
+        experience: profile.experience || "",
+        language: profile.language || "",
         gender: profile.gender || "",
-        dob: profile.dob || "",
-        birthTime: profile.birthTime || "",
-        birthPlace: profile.birthPlace || "",
+        expertise: (profile.expertise || []).join(", "),
+        preferredCardType: profile.preferredCardType || "",
       });
     }
   }, [profile]);
 
-  // Clear messages
   useEffect(() => {
-    if (message) {
-      setTimeout(() => dispatch(clearUserMessage()), 2500);
-    }
-    if (error) {
-      setTimeout(() => dispatch(clearUserError()), 2500);
-    }
+    if (message) setTimeout(() => dispatch(clearExpertMessage()), 2000);
+    if (error) setTimeout(() => dispatch(clearExpertError()), 2000);
   }, [message, error]);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleUpdate = (e) => {
     e.preventDefault();
-    dispatch(updateUserProfile({ id: userId, data: formData }));
+
+    const fd = new FormData();
+    Object.keys(formData).forEach((key) => fd.append(key, formData[key]));
+
+    if (profilePic) fd.append("profilePic", profilePic);
+    if (certificates.length > 0)
+      for (let file of certificates) fd.append("certificates", file);
+
+    dispatch(updateExpertProfile(fd));
   };
 
-//   if (!userId) {
-//     return <p className="text-center mt-10">Please login to view profile.</p>;
-//   }
-
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-xl">
-      <h2 className="text-2xl font-semibold mb-4">My Profile</h2>
+    <div className="min-h-screen bg-black text-white px-4 py-10">
+      <div className="max-w-2xl mx-auto backdrop-blur-lg bg-white/5 p-8 rounded-2xl shadow-xl border border-white/10">
 
-      {loading && <p className="text-blue-600">Loading...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-      {message && <p className="text-green-600">{message}</p>}
+        <h2 className="text-3xl font-bold mb-6 text-center bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+          Expert Profile
+        </h2>
 
-      <form onSubmit={handleUpdate} className="grid grid-cols-1 gap-4">
+        {loading && <p className="text-blue-400 text-center">Loading...</p>}
+        {error && <p className="text-red-400 text-center">{error}</p>}
+        {message && <p className="text-green-400 text-center">{message}</p>}
 
-        <input
-          type="text"
-          name="firstName"
-          placeholder="First Name"
-          className="border p-2 rounded"
-          value={formData.firstName}
-          onChange={handleChange}
-        />
+        <form onSubmit={handleUpdate} className="space-y-5">
 
-        <input
-          type="text"
-          name="lastName"
-          placeholder="Last Name"
-          className="border p-2 rounded"
-          value={formData.lastName}
-          onChange={handleChange}
-        />
+          {/* INPUT COMPONENT */}
+          {[
+            { name: "name", placeholder: "Full Name" },
+            { name: "email", type: "email", placeholder: "Email" },
+            { name: "phoneNo", placeholder: "Phone Number" },
+            { name: "skills", placeholder: "Skills (comma separated)" },
+            { name: "experience", type: "number", placeholder: "Experience (years)" },
+            { name: "language", placeholder: "Language" },
+            { name: "expertise", placeholder: "Expertise (comma separated)" },
+            { name: "preferredCardType", placeholder: "Preferred Card Type" },
+          ].map((input) => (
+            <input
+              key={input.name}
+              type={input.type || "text"}
+              name={input.name}
+              placeholder={input.placeholder}
+              value={formData[input.name]}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-white/10 border border-white/20 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          ))}
 
-        <input
-          type="text"
-          name="phoneNo"
-          placeholder="Phone Number"
-          className="border p-2 rounded"
-          value={formData.phoneNo}
-          onChange={handleChange}
-        />
+          {/* BIO */}
+          <textarea
+            name="bio"
+            value={formData.bio}
+            placeholder="Write your bio..."
+            rows={3}
+            onChange={handleChange}
+            className="w-full p-3 rounded-lg bg-white/10 border border-white/20 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          />
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          className="border p-2 rounded"
-          value={formData.email}
-          onChange={handleChange}
-        />
+          {/* GENDER */}
+          <select
+            name="gender"
+            value={formData.gender}
+            onChange={handleChange}
+            className="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          >
+            <option value="">Select Gender</option>
+            <option className="bg-black" value="male">Male</option>
+            <option className="bg-black" value="female">Female</option>
+            <option className="bg-black" value="other">Other</option>
+          </select>
 
-        <select
-          name="gender"
-          className="border p-2 rounded"
-          value={formData.gender}
-          onChange={handleChange}
-        >
-          <option value="">Select Gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-        </select>
+          {/* PROFILE PICTURE */}
+          <label className="text-gray-300 font-medium">Profile Picture</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setProfilePic(e.target.files[0])}
+            className="block w-full text-gray-300"
+          />
 
-        <label className="text-sm font-medium">Date of Birth</label>
-        <input
-          type="date"
-          name="dob"
-          className="border p-2 rounded"
-          value={formData.dob}
-          onChange={handleChange}
-        />
+          {profile?.profilePic && (
+            <img
+              src={profile.profilePic}
+              alt="Profile"
+              className="w-24 h-24 rounded-full border border-white/20 object-cover mt-2"
+            />
+          )}
 
-        <label className="text-sm font-medium">Birth Time</label>
-        <input
-          type="time"
-          name="birthTime"
-          className="border p-2 rounded"
-          value={formData.birthTime}
-          onChange={handleChange}
-        />
+          {/* CERTIFICATES */}
+          <label className="text-gray-300 font-medium">Certificates (Images / PDF)</label>
+          <input
+            type="file"
+            multiple
+            accept=".jpg,.jpeg,.png,.webp,.pdf"
+            onChange={(e) => setCertificates(e.target.files)}
+            className="block w-full text-gray-300"
+          />
 
-        <input
-          type="text"
-          name="birthPlace"
-          placeholder="Birth Place"
-          className="border p-2 rounded"
-          value={formData.birthPlace}
-          onChange={handleChange}
-        />
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-linear-to-r from-purple-600 to-blue-600 py-3 rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50"
+          >
+            {loading ? "Updating..." : "Update Profile"}
+          </button>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-600 text-white py-2 rounded mt-2 disabled:bg-blue-300"
-        >
-          {loading ? "Updating..." : "Update Profile"}
-        </button>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };
 
-export default Profile;
+export default ExpertProfile;

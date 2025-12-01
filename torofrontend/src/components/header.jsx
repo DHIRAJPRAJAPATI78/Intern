@@ -1,14 +1,27 @@
 import { useEffect, useState, useRef } from "react";
 import { Menu, X, Bell, Moon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getExpertProfile, logoutExpert } from "../features/authSlice";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const user = null;
+  const dispatch = useDispatch();
 
+  // Logged-in expert (if any)
+  const { expert, profile } = useSelector((state) => state.expert);
+
+  useEffect(() => {
+    // Fetch profile only when expert token exists
+    if (expert) {
+      dispatch(getExpertProfile());
+    }
+  }, [expert]);
+
+  // Hide dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -19,7 +32,6 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ⭐ Tarot Reader Navigation Links
   const navLinks = [
     { name: "About Tarot", href: "/about" },
     { name: "Book Reading", href: "/book" },
@@ -27,10 +39,11 @@ const Header = () => {
     { name: "Horoscope", href: "/horoscope" },
     { name: "Contact", href: "/contact" },
 
-  { name: "My Profile", href: "/profile", type: "mobile" },
-  { name: "My Bookings", href: "/my-bookings", type: "mobile" },
-  { name: "Settings", href: "/settings", type: "mobile" },
-  { name: "Logout", href: "/logout", type: "mobile" },
+    // Mobile profile links
+    { name: "My Profile", href: "/profile", type: "mobile" },
+    { name: "My Bookings", href: "/my-bookings", type: "mobile" },
+    { name: "Settings", href: "/settings", type: "mobile" },
+    { name: "Logout", href: "/logout", type: "mobile" },
   ];
 
   return (
@@ -63,7 +76,7 @@ const Header = () => {
 
         {/* Right Section */}
         <div className="hidden md:flex items-center space-x-4">
-          {user && (
+          {expert && profile ? (
             <>
               <button className="text-gray-300 hover:text-white transition">
                 <Bell size={20} />
@@ -79,7 +92,11 @@ const Header = () => {
                   onClick={() => setDropdownOpen((prev) => !prev)}
                   className="flex items-center focus:outline-none"
                 >
-                  <div className="w-9 h-9 rounded-full bg-gray-700 border border-gray-600"></div>
+                  <img
+                    src={profile.profilePic || "https://via.placeholder.com/40"}
+                    alt="Profile"
+                    className="w-9 h-9 rounded-full object-cover border border-gray-600"
+                  />
                 </button>
 
                 {dropdownOpen && (
@@ -88,13 +105,15 @@ const Header = () => {
                       <li className="px-4 py-2 hover:bg-gray-800 cursor-pointer">
                         <Link to="/profile">My Profile</Link>
                       </li>
-                      <li className="px-4 py-2 hover:bg-gray-800 cursor-pointer">
-                        Submissions
-                      </li>
+
                       <li className="px-4 py-2 hover:bg-gray-800 cursor-pointer">
                         Settings
                       </li>
-                      <li className="px-4 py-2 hover:bg-gray-800 cursor-pointer text-red-400">
+
+                      <li
+                        onClick={() => dispatch(logoutExpert())}
+                        className="px-4 py-2 hover:bg-gray-800 cursor-pointer text-red-400"
+                      >
                         Logout
                       </li>
                     </ul>
@@ -102,9 +121,7 @@ const Header = () => {
                 )}
               </div>
             </>
-          )}
-
-          {!user && (
+          ) : (
             <Link
               to="/login"
               className="px-4 py-2 bg-purple-600 rounded-md text-white hover:bg-purple-700 transition"
@@ -137,7 +154,7 @@ const Header = () => {
             </Link>
           ))}
 
-          {!user && (
+          {!expert && (
             <Link
               to="/login"
               className="px-6 py-3 bg-purple-600 rounded-lg font-semibold text-white hover:scale-105 transition-transform duration-300 shadow-lg shadow-purple-800/30"
