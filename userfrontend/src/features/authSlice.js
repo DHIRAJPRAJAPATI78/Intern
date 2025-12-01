@@ -91,7 +91,8 @@ export const changePassword = createAsyncThunk(
   "user/changePassword",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await API.post("/password/change", data);
+      const res = await API.put("/password/change", data);
+      console.log(res);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Password change failed");
@@ -158,6 +159,7 @@ const userSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
         state.message = action.payload.message;
+        state.user = action.payload;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;

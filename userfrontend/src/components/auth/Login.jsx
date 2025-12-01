@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, message } = useSelector((state) => state.user);
+  const { loading, error, message,user } = useSelector((state) => state.user);
 
   const [isLogin, setIsLogin] = useState(true);
 
@@ -44,7 +44,7 @@ export default function Login() {
         })
       ).unwrap()
 
-      navigate("/profile");
+      navigate("/");
     } catch (err) {
       console.error("Login failed:", err);
     }
@@ -53,7 +53,19 @@ export default function Login() {
  
   const handleRegister = (e) => {
     e.preventDefault();
-    dispatch(registerUser(formData));
+
+
+    try {
+   
+      dispatch(registerUser(formData)).unwrap()
+
+      navigate("/");
+    } catch (err) {
+      console.error("Registration failed:", err);
+    }
+
+
+    
   };
 
   

@@ -11,6 +11,19 @@ import Home from "./Home";
 import { Toaster } from "react-hot-toast";
 import ChangePassword from "./components/auth/ChangePassword";
 
+
+import ProtectedRoute from "./routes/protectedRoutes";
+import About from "./pages/about";
+import Booking from "./pages/Booking";
+import TarotCard from "./pages/TarotCard";
+import Horoscope from "./pages/Horoscope";
+import Contact from "./pages/Contact";
+import MyBooking from "./components/MyBooking";
+import Setting from "./components/Setting";
+
+
+
+
 function App() {
   return (
     <Provider store={store}>
@@ -21,9 +34,68 @@ function App() {
           <Route path='/' element={<Home />} />
           <Route path='/login' element={<Login />} />
           <Route path='/forgot-password' element={<ForgotPassword />} />
-          <Route path='/resetpassword' element={<ResetPassword />} />
-          <Route path='/profile' element={<Profile />} />
-          <Route path='/change-password' element={<ChangePassword />} />
+          <Route path='/about' element={<About />} />
+          <Route path='/book' element={<Booking />} />
+          <Route path='/cards' element={<TarotCard />} />
+          <Route path='/horoscope' element={<Horoscope />} />
+          <Route path='/contact' element={<Contact/>} />
+
+
+
+
+
+            {/* Protected Routes */}
+            <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/change-password"
+            element={
+              <ProtectedRoute>
+                <ChangePassword />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/resetpassword"
+            element={
+              <ProtectedRoute>
+                <ResetPassword />
+              </ProtectedRoute>
+            }
+          />
+
+
+
+          <Route
+            path="/my-bookings"
+            element={
+              <ProtectedRoute>
+                <MyBooking />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Setting />
+              </ProtectedRoute>
+            }
+          />
+
+       
+
+
+
         </Routes>
       </Router>
     </Provider>
