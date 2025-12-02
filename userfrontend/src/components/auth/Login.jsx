@@ -10,6 +10,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
+
+import SimplePeer from "simple-peer";
+import EventEmitter from "events";
+
+// Fix EventEmitter for SimplePeer
+window.EventEmitter = EventEmitter;
+
+import { socket } from "../../lib/socket";
+// import { io } from "socket.io-client";
+
+// const socket = io("http://localhost:3000");
+
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -37,18 +49,26 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      await dispatch(
+      const result = await dispatch(
         loginUser({
           email: formData.email,
           password: formData.password,
         })
       ).unwrap()
+         console.log(result);
+        const userId = result._id;
+
+        socket.emit("register-user", userId);
+        console.log(`User registered with ID: ${userId}, socket: ${socket.id}`);
 
       navigate("/");
     } catch (err) {
       console.error("Login failed:", err);
     }
   };
+
+
+   
 
  
   const handleRegister = (e) => {

@@ -14,12 +14,14 @@ const Header = () => {
   // Logged-in expert (if any)
   const { expert, profile } = useSelector((state) => state.expert);
 
-  useEffect(() => {
-    // Fetch profile only when expert token exists
-    if (expert) {
-      dispatch(getExpertProfile());
-    }
-  }, [expert]);
+
+
+  // useEffect(() => {
+  //   // Fetch profile only when expert token exists
+  //   if (expert) {
+  //     dispatch(getExpertProfile());
+  //   }
+  // }, [expert]);
 
   // Hide dropdown when clicking outside
   useEffect(() => {
@@ -38,6 +40,7 @@ const Header = () => {
     { name: "Tarot Cards", href: "/cards" },
     { name: "Horoscope", href: "/horoscope" },
     { name: "Contact", href: "/contact" },
+    {name:"Video" , href: "/video"},
 
     // Mobile profile links
     { name: "My Profile", href: "/profile", type: "mobile" },
@@ -45,6 +48,16 @@ const Header = () => {
     { name: "Settings", href: "/settings", type: "mobile" },
     { name: "Logout", href: "/logout", type: "mobile" },
   ];
+
+  function handleLogoutExpert(){
+    try {
+      dispatch(logoutExpert())
+      navigate("/");
+    } catch (error) {
+        console.error("Logout Failed");
+    }
+    
+  }
 
   return (
     <header className="fixed top-0 left-0 w-full h-16 bg-black/80 backdrop-blur-md border-b border-gray-800 z-50 shadow-md">
@@ -76,7 +89,7 @@ const Header = () => {
 
         {/* Right Section */}
         <div className="hidden md:flex items-center space-x-4">
-          {expert && profile ? (
+          {expert  ? (
             <>
               <button className="text-gray-300 hover:text-white transition">
                 <Bell size={20} />
@@ -93,7 +106,7 @@ const Header = () => {
                   className="flex items-center focus:outline-none"
                 >
                   <img
-                    src={profile.profilePic || "https://via.placeholder.com/40"}
+                    src={profile?.profilePic || "https://via.placeholder.com/40"}
                     alt="Profile"
                     className="w-9 h-9 rounded-full object-cover border border-gray-600"
                   />
@@ -111,7 +124,7 @@ const Header = () => {
                       </li>
 
                       <li
-                        onClick={() => dispatch(logoutExpert())}
+                        onClick={handleLogoutExpert}
                         className="px-4 py-2 hover:bg-gray-800 cursor-pointer text-red-400"
                       >
                         Logout

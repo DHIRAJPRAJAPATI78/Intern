@@ -2,10 +2,23 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { loginExpert, registerExpert } from "../../features/authSlice.js";
+import { useNavigate } from "react-router-dom";
+import SimplePeer from "simple-peer";
+import EventEmitter from "events";
+import { socket } from "../../lib/socket.js";
+
+// Fix EventEmitter for SimplePeer
+window.EventEmitter = EventEmitter;
+
+
+// import { io } from "socket.io-client";
+
+// const socket = io("http://localhost:3000");
 
 export default function ExpertAuth() {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { loading, error, message } = useSelector((state) => state.expert);
+  const { loading, error, message,expert } = useSelector((state) => state.expert);
 
   const [isLogin, setIsLogin] = useState(true);
 
@@ -21,14 +34,47 @@ export default function ExpertAuth() {
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleLogin = (e) => {
+  // const handleLogin = (e) => {
+  //   e.preventDefault();
+
+  //   dispatch(loginExpert({ email: formData.email, password: formData.password })).unwrap();
+  //   socket.emit("register-expert", (expertId) => {
+  //     onlineExperts[expert.expert._id] = socket.id;
+  //     console.log(expert.expert._id)
+    
+  //     io.emit("online-experts", onlineExperts); // notify all users
+  //   });
+  //   navigate("/");
+  // };
+
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    dispatch(loginExpert({ email: formData.email, password: formData.password }));
+    
+    try {
+      const result = await dispatch(
+        loginExpert({ email: formData.email, password: formData.password })
+      ).unwrap();
+  
+      // result contains logged-in expert details
+      console.log(result)
+      const expertId = result.expertId;
+  
+      // Register this expert's socket
+      socket.emit("register-expert", expertId);
+      console.log(`Expert registered with ID: ${expertId}, socket: ${socket.id}`);
+  
+      navigate("/");
+    } catch (err) {
+      console.log(err);
+    }
   };
+  
 
   const handleRegister = (e) => {
     e.preventDefault();
-    dispatch(registerExpert(formData));
+    dispatch(registerExpert(formData)).unwrap();
+    navigate("/")
   };
 
   return (

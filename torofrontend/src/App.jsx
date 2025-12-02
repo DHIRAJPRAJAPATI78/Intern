@@ -7,6 +7,8 @@ import ForgotPassword from "./components/auth/ForgotPassword";
 import ResetPassword from "./components/auth/ResetPassword";
 import Profile from "./components/profile/Profile";
 import Home from "./Home";
+import Video from "./components/video";
+import IncomingCallPopup from "./components/incomingCallPopup";
 
 
 function App() {
@@ -14,12 +16,16 @@ function App() {
     <Provider store={store}>
       <Router>
         <Header />
+        <IncomingCallPopup/>
         <Routes>
           <Route path='/' element={<Home />} />
+          {/* <Route path="/contact" element={<Contact/>} /> */}
           <Route path='/login' element={<Login />} />
           <Route path='/forgot-password' element={<ForgotPassword />} />
           <Route path='/resetpassword' element={<ResetPassword />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/video" element={<Video/>} />
+
 
         </Routes>
       </Router>

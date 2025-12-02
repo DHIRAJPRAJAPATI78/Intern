@@ -20,6 +20,7 @@ import Horoscope from "./pages/Horoscope";
 import Contact from "./pages/Contact";
 import MyBooking from "./components/MyBooking";
 import Setting from "./components/Setting";
+import Video from "./components/video";
 
 
 
@@ -39,6 +40,7 @@ function App() {
           <Route path='/cards' element={<TarotCard />} />
           <Route path='/horoscope' element={<Horoscope />} />
           <Route path='/contact' element={<Contact/>} />
+          <Route path='/video' element={<Video/>} />
 
 
 

@@ -23,14 +23,14 @@ export default function Home() {
       </motion.div>
 
       {/* Tarot Card Image */}
-      <motion.img
+      {/* <motion.img
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.7 }}
         src="https://i.postimg.cc/VNcWPvHs/tarot-card.png"
         alt="Tarot"
         className="mt-10 w-48 h-72 object-cover rounded-xl shadow-[0_0_25px_rgba(255,0,150,0.4)]"
-      />
+      /> */}
 
       {/* Features Section */}
       <motion.div

@@ -234,6 +234,7 @@ const Header = () => {
     { name: "Tarot Cards", href: "/cards" },
     { name: "Horoscope", href: "/horoscope" },
     { name: "Contact", href: "/contact" },
+    { name: "Video", href: "/video" }
   ];
 
   return (
