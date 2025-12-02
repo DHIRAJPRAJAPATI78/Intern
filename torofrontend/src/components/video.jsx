@@ -9,6 +9,8 @@ import EventEmitter from "events";
 import { socket } from "../lib/socket";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import useSpeechRecognition from "../../src/hooks/useSpeechRecognition";
+
 
 
 window.EventEmitter = EventEmitter;
@@ -39,6 +41,16 @@ const Video = () => {
   const queuedSignalsRef = useRef([]);
 
   const [status, setStatus] = useState("connecting…");
+  const [mic,setMic] = useState(true);
+
+
+  const [transcript, setTranscript] = useState("");
+
+  const { startListening, stopListening, isListening } = 
+    useSpeechRecognition((text) => {
+      setTranscript(text);
+    });
+
 
   const startLocalStream = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -86,6 +98,8 @@ const Video = () => {
     p.on("connect", () => {
       console.log("✅ Expert peer connected!");
       setStatus("connected");
+
+      startListening();   // 🎤 START SPEECH RECOGNITION
     });
 
     p.on("error", (err) => {
@@ -207,11 +221,49 @@ const Video = () => {
   }, [remoteId, role, expert?.expertId, navigate]);
 
 
-
+ 
+  const toggleMic = () => {
+    const stream = localStreamRef.current;
+    if (!stream) {
+      console.warn("No local stream available");
+      return;
+    }
+  
+    const [audioTrack] = stream.getAudioTracks();
+    if (!audioTrack) {
+      console.warn("No audio track found in local stream");
+      return;
+    }
+  
+    // If the track is ended, we can't toggle it
+    if (audioTrack.readyState === "ended") {
+      console.warn("Audio track has ended; cannot toggle mic. You may need to recreate the stream.");
+      return;
+    }
+  
+    // Toggle track enabled
+    const nextEnabled = !audioTrack.enabled;    //enabled false on mic off
+    audioTrack.enabled = nextEnabled;
+  
+    // Sync React state with actual track state
+    setMic(nextEnabled);    // mic === true → Mic is ON, audioTrack.enabled === true
+  
+    // Control STT
+    if (nextEnabled) {
+      startListening();   // Mic ON → Start recognition
+    } else {
+      stopListening();    // Mic OFF → Stop recognition
+    }
+  
+    console.log("Mic is now", nextEnabled ? "ON" : "OFF", audioTrack);
+  };
+  
+  
 
 
 const endCall = async () => {
     try {
+      stopListening(); // 🎤 STOP SPEECH RECOGNITION
       if (peerRef.current) peerRef.current.destroy();
       socket.emit("end-call", { to: remoteId });
   
@@ -249,6 +301,21 @@ const endCall = async () => {
             playsInline
             className="w-64 h-40 bg-zinc-900 rounded-xl"
           />
+        <button
+            onClick={toggleMic}
+            className="mt-4 px-4 py-2 bg-blue-600 rounded-lg"
+          >
+            {mic
+              ? "Mic ON"
+              : "Mic OFF"}
+          </button> 
+<div className="mt-4 bg-zinc-800 p-3 rounded-lg w-80 text-sm">
+  <p className="text-zinc-400 mb-1">Live Transcription:</p>
+  <p>{transcript}</p>
+</div>
+
+
+          
         </div>
 
         <div>
