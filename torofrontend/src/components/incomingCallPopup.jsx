@@ -2,39 +2,18 @@
 import React, { useEffect, useState } from "react";
 import { socket } from "../lib/socket";   // your shared socket instance
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 export default function IncomingCallPopup() {
-  const [incoming, setIncoming] = useState(null); // { from, callerName }
+  const [incoming, setIncoming] = useState(null); // { from, callerName, callId }
   const navigate = useNavigate();
-
-//   socket.on("incoming-call", ({ from, callerName }) => {
-//     console.log(from, callerName);
-//   setIncoming({ from, callerName });
-// });
-
-//   useEffect(() => {
-//     // when some user calls this expert
-//     console.log("useeffect")
-//     // socket.on("incoming-call", ({ from, callerName }) => {
-//     //     console.log(from, callerName);
-//     //   setIncoming({ from, callerName });
-//     // });
-
-//     return () => {
-//       socket.off("incoming-call");
-//     };
-//   }, []);
-
-
-
-//user mongo id
-//expert socket id
+  const { expert } = useSelector((state) => state.expert); 
 
   useEffect(() => {
-    const handleIncoming = ({ from, callerName }) => {
+    const handleIncoming = ({ from, callerName , callId }) => {
         //from user mongo id
-      console.log("incoming-call:", from, callerName);
-      setIncoming({ from, callerName });
+      console.log("incoming-call:", from, callerName, callId);
+      setIncoming({ from, callerName, callId });
     };
 
     socket.on("incoming-call", handleIncoming);
@@ -54,7 +33,8 @@ export default function IncomingCallPopup() {
     // 🔹 tell backend: I accepted the call
     socket.emit("accept-call", {
       to: incoming.from,       // caller socket id            //user mongo id
-      from: socket.id,         // expert socket id            //expert socket id
+      from:expert?.expertId,          // expert socket id            //expert socket id   //this line is changed
+      callId:incoming.callId
     });
 
     // 🔹 go to Video page as EXPERT
@@ -63,6 +43,7 @@ export default function IncomingCallPopup() {
       state: {
         remoteId: incoming.from,
         role: "expert",
+        callId: incoming.callId
       },
     });
 
@@ -71,10 +52,7 @@ export default function IncomingCallPopup() {
   console.log("incoming compo")
 
 
-
-
-
-  const handleDecline = () => {
+    const handleDecline = () => {
     setIncoming(null);
     // optionally emit "call-declined"
   };

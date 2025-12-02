@@ -33,86 +33,127 @@ const {user }= useSelector( (store) => store.user)
 
   useEffect(() => {
     fetchExperts();
-  }, []);
+  }, [])
 
+  // const handleVideoCall = async (expertId) => {
+  //   // 🔁 Navigate to your video call page/room
+  //   // navigate(`/video-call/${expertId}`);
+  //   // socket.emit("register-user", user._id );  // register current user
+  //   console.log(expertId)
 
-
-
-   // 🔥 listen for online experts map from backend
-  //  useEffect(() => {
-  //   const handleOnlineExperts = (data) => {
-  //     // data = { expertId: socketId, ... }
-  //     setOnlineExperts(data);
-  //   };
-
-  //   socket.on("online-experts", handleOnlineExperts);
-
-  //   return () => socket.off("online-experts", handleOnlineExperts);
-  // }, []);
-
-  // const handleVideoCall = (expertId) => {
-  //   // convert DB _id -> socket.id
-  //   const expertSocketId = onlineExperts[expertId];
-
-  //   if (!expertSocketId) {
+  //   if (!expertId) {
   //     alert("Expert is offline");
   //     return;
   //   }
 
-  //   // optional: register user
-  //   // socket.emit("register-user", user._id);
-
-  //   // navigate to video page as CALLER
-  //   navigate("/video", {
-  //     state: {
-  //       remoteId: expertSocketId,
-  //       role: "caller",
-  //     },
-  //   });
-
-  //   // notify expert via backend
-  //   socket.emit("call-user", {
-  //     to: expertSocketId,
-  //     from: socket.id,
-  //     callerName: user?.name || "User",
-  //   });
-  // };
+  //   if (!user?._id) {
+  //     alert("Please login to start a call.");
+  //     return;
+  //   }
 
 
+  //     // 1) Create a call session in DB
+  //     const res = await axios.post(
+  //       "http://localhost:3000/call/start",
+  //       {
+  //         expertId,
+  //         userId: user._id, // optional if you don't have auth middleware
+  //       },
+  //       { withCredentials: true }
+  //     );
+  
+  //     const call = res.data?.call;
+  //     if (!call?._id) {
+  //       alert("Failed to create call session");
+  //       return;
+  //     }
+  
+  //     const callId = call._id;
 
-
-
-
-
-  const handleVideoCall = (expertId) => {
-    // 🔁 Navigate to your video call page/room
-    // navigate(`/video-call/${expertId}`);
-    // socket.emit("register-user", user._id );  // register current user
-    console.log(expertId)
-
-    if (!expertId) {
-      alert("Expert is offline");
-      return;
-    }
 
   
 
-    // go to video page as CALLER
-    navigate("/video", {
-      state: {
-        remoteId: expertId,
-        role: "caller",
-      },
-    });
+  //   // go to video page as CALLER
+  //   navigate("/video", {
+  //     state: {
+  //       remoteId: expertId,
+  //       role: "caller",
+  //       callId,             // store this in video component for tracking
+  //     },
+  //   });
 
-    socket.emit("call-user", {
-      to: expertId,
-      from: user?._id,
-      callerName: user?.name || "User",
-    });
+  //   socket.emit("call-user", {
+  //     to: expertId,
+  //     from: user?._id,
+  //     callerName: user?.name || "User",
+  //     callId,              // pass callId through signaling if you want expert to know too
+  //   });
 
+  // };
+
+
+  const handleVideoCall = async (expertId) => {
+    try {
+      if (!expertId) {
+        alert("Expert is offline");
+        return;
+      }
+  
+      if (!user?._id) {
+        alert("Please login to start a call.");
+        return;
+      }
+  
+      // 1) Create a call session in DB
+      console.log("expertId:",expertId);
+      console.log("userId:",user?._id);
+      const res = await axios.post(
+        "http://localhost:3000/call/start",
+        {
+          expertId,
+          userId: user?._id, // optional if you don't have auth middleware
+        },
+        { withCredentials: true }
+      );
+  
+      console.log(res);
+
+
+
+
+      const call = res.data?.call;
+      if (!call?._id) {
+        alert("Failed to create call session");
+        return;
+      }
+  
+      const callId = call._id;
+  
+      // 2) Navigate to video page as CALLER, with callId
+      navigate("/video", {
+        state: {
+          remoteId: expertId, // expert Mongo ID
+          role: "caller",
+          callId,             // store this in video component for tracking
+        },
+      });
+  
+      // 3) Notify server to ring expert via socket
+      socket.emit("call-user", {
+        to: expertId,        // expertId (Mongo)
+        from: user._id,      // userId (Mongo)
+        callerName: user.name || "User",
+        callId,              // pass callId through signaling if you want expert to know too
+      });
+    } catch (error) {
+      console.error("Error starting video call:", error);
+      alert(
+        error.response?.data?.message ||
+          "Failed to start call. Please try again."
+      );
+    }
   };
-
+  
   const getStatusClasses = (status) => {
     switch (status) {
       case "online":
