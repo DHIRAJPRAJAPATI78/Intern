@@ -37,6 +37,8 @@ const Video = () => {
   const [mic,setMic] = useState(true);
 
   const [status, setStatus] = useState("connecting…");
+  const [videoEnabled, setVideoEnabled] = useState(true);
+
 
   // const [transcript, setTranscript] = useState("");
   // const [chunks, setChunks] = useState([]); // { text, speaker, createdAt }
@@ -304,6 +306,34 @@ const Video = () => {
   
     console.log("Mic is now", nextEnabled ? "ON" : "OFF", audioTrack);
   };
+
+
+const toggleVideo = () => {
+  const stream = localStreamRef.current;
+  if (!stream) {
+    console.warn("No local stream available");
+    return;
+  }
+
+  const [videoTrack] = stream.getVideoTracks();
+  if (!videoTrack) {
+    console.warn("No video track found in local stream");
+    return;
+  }
+
+  if (videoTrack.readyState === "ended") {
+    console.warn("Video track has ended; cannot toggle");
+    return;
+  }
+
+  const nextState = !videoTrack.enabled;
+  videoTrack.enabled = nextState;
+
+  setVideoEnabled(nextState);
+
+  console.log("📹 Video is now", nextState ? "ON" : "OFF");
+};
+
   
   
   
@@ -331,6 +361,13 @@ const Video = () => {
               ? "Mic ON"
               : "Mic OFF"}
           </button>
+          <button
+  onClick={toggleVideo}
+  className="mt-4 px-4 py-2 bg-purple-600 rounded-lg"
+>
+  {videoEnabled ? "Video ON" : "Video OFF"}
+</button>
+
 
           <div className="mt-4 bg-zinc-800 p-3 rounded-lg w-80 text-sm">
   <p className="text-zinc-400 mb-1">Live Transcription:</p>

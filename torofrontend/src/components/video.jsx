@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import SimplePeer from "simple-peer";
@@ -10,8 +6,6 @@ import { socket } from "../lib/socket";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import useSpeechRecognition from "../../src/hooks/useSpeechRecognition";
-
-
 
 window.EventEmitter = EventEmitter;
 
@@ -27,12 +21,6 @@ const Video = () => {
   const { remoteId, role, callId } = location.state || {}; // role: "caller" on user side
   const { expert } = useSelector((state) => state.expert); // adjust to your store
 
-//   Tino ok hai
-//   console.log(remoteId);
-//   console.log(role);
-//   console.log(expert);
-  
-
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -41,16 +29,16 @@ const Video = () => {
   const queuedSignalsRef = useRef([]);
 
   const [status, setStatus] = useState("connecting…");
-  const [mic,setMic] = useState(true);
-
+  const [mic, setMic] = useState(true);
+  const [videoEnabled, setVideoEnabled] = useState(true);
 
   const [transcript, setTranscript] = useState("");
 
-  const { startListening, stopListening, isListening } = 
-    useSpeechRecognition((text) => {
+  const { startListening, stopListening, isListening } = useSpeechRecognition(
+    (text) => {
       setTranscript(text);
-    });
-
+    }
+  );
 
   const startLocalStream = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -76,8 +64,8 @@ const Video = () => {
     // send WebRTC signaling data to backend
     p.on("signal", (data) => {
       socket.emit("signal", {
-        to: otherId,        // MONGO ID (expertId or userId)
-        from: expert?.expertId,    // send our Mongo userId (not socket.id)
+        to: otherId, // MONGO ID (expertId or userId)
+        from: expert?.expertId, // send our Mongo userId (not socket.id)
         payload: data,
       });
     });
@@ -93,13 +81,11 @@ const Video = () => {
       }
     });
 
-
-
     p.on("connect", () => {
       console.log("✅ Expert peer connected!");
       setStatus("connected");
 
-      startListening();   // 🎤 START SPEECH RECOGNITION
+      startListening(); // 🎤 START SPEECH RECOGNITION
     });
 
     p.on("error", (err) => {
@@ -112,13 +98,10 @@ const Video = () => {
       setStatus("ended");
     });
 
-
-
     peerRef.current = p;
   };
 
-  console.log(remoteId , role , expert?.expertId);
-
+  console.log(remoteId, role, expert?.expertId);
 
   useEffect(() => {
     if (!remoteId || !role || !expert?.expertId) {
@@ -126,25 +109,21 @@ const Video = () => {
       return;
     }
 
-
-
-
-
-
-
-     
     if (!isInitializedRef.current) {
       isInitializedRef.current = true;
 
       startLocalStream().then(() => {
-       
         if (role === "expert" && !peerRef.current) {
           setStatus("connecting to caller…");
           console.log("🔧 Expert creating peer for user:", remoteId);
-          createPeer(remoteId, false);  // Expert is non-initiator
+          createPeer(remoteId, false); // Expert is non-initiator
 
           // Replay any queued signals that arrived before peer was ready
-          console.log("📦 Replaying", queuedSignalsRef.current.length, "queued signals");
+          console.log(
+            "📦 Replaying",
+            queuedSignalsRef.current.length,
+            "queued signals"
+          );
           queuedSignalsRef.current.forEach(({ from, payload }) => {
             console.log("🔄 Replaying signal:", payload.type);
             peerRef.current.signal(payload);
@@ -156,20 +135,14 @@ const Video = () => {
         if (role === "caller") {
           setStatus("calling…");
 
-          
           socket.emit("call-user", {
-            to: remoteId,         
-            from: expert?.expertId,      
+            to: remoteId,
+            from: expert?.expertId,
             callerName: expert.name || "Caller",
           });
         }
       });
     }
-
-
-
-
-
 
     // When expert accepts the call
     const onCallAccepted = ({ from }) => {
@@ -181,12 +154,9 @@ const Video = () => {
       }
     };
 
-
-
-
     // When we receive WebRTC signaling data from expert
     const onSignal = ({ from, payload }) => {
-     console.log("📥 EXPERT RECEIVED SIGNAL:", payload.type, "from:", from);
+      console.log("📥 EXPERT RECEIVED SIGNAL:", payload.type, "from:", from);
       // `from` = expertId (Mongo) or userId depending on backend
       // If peer not ready yet, queue the signal for replay later
       if (!peerRef.current) {
@@ -195,7 +165,7 @@ const Video = () => {
         return;
       }
 
-       // Peer is ready, signal immediately
+      // Peer is ready, signal immediately
       peerRef.current.signal(payload);
     };
 
@@ -220,53 +190,76 @@ const Video = () => {
     };
   }, [remoteId, role, expert?.expertId, navigate]);
 
-
- 
   const toggleMic = () => {
     const stream = localStreamRef.current;
     if (!stream) {
       console.warn("No local stream available");
       return;
     }
-  
+
     const [audioTrack] = stream.getAudioTracks();
     if (!audioTrack) {
       console.warn("No audio track found in local stream");
       return;
     }
-  
+
     // If the track is ended, we can't toggle it
     if (audioTrack.readyState === "ended") {
-      console.warn("Audio track has ended; cannot toggle mic. You may need to recreate the stream.");
+      console.warn(
+        "Audio track has ended; cannot toggle mic. You may need to recreate the stream."
+      );
       return;
     }
-  
+
     // Toggle track enabled
-    const nextEnabled = !audioTrack.enabled;    //enabled false on mic off
+    const nextEnabled = !audioTrack.enabled; //enabled false on mic off
     audioTrack.enabled = nextEnabled;
-  
+
     // Sync React state with actual track state
-    setMic(nextEnabled);    // mic === true → Mic is ON, audioTrack.enabled === true
-  
+    setMic(nextEnabled); // mic === true → Mic is ON, audioTrack.enabled === true
+
     // Control STT
     if (nextEnabled) {
-      startListening();   // Mic ON → Start recognition
+      startListening(); // Mic ON → Start recognition
     } else {
-      stopListening();    // Mic OFF → Stop recognition
+      stopListening(); // Mic OFF → Stop recognition
     }
-  
+
     console.log("Mic is now", nextEnabled ? "ON" : "OFF", audioTrack);
   };
-  
-  
 
+  const toggleVideo = () => {
+    const stream = localStreamRef.current;
+    if (!stream) {
+      console.warn("No local stream available");
+      return;
+    }
 
-const endCall = async () => {
+    const [videoTrack] = stream.getVideoTracks();
+    if (!videoTrack) {
+      console.warn("No video track found in local stream");
+      return;
+    }
+
+    if (videoTrack.readyState === "ended") {
+      console.warn("Video track has ended; cannot toggle");
+      return;
+    }
+
+    const nextState = !videoTrack.enabled;
+    videoTrack.enabled = nextState;
+
+    setVideoEnabled(nextState);
+
+    console.log("📹 Video is now", nextState ? "ON" : "OFF");
+  };
+
+  const endCall = async () => {
     try {
       stopListening(); // 🎤 STOP SPEECH RECOGNITION
       if (peerRef.current) peerRef.current.destroy();
       socket.emit("end-call", { to: remoteId });
-  
+
       // if you passed callId in location.state
       if (callId) {
         await axios.put(
@@ -277,16 +270,16 @@ const endCall = async () => {
           },
           { withCredentials: true }
         );
-        console.log("Call ended")
+        console.log("Call ended");
       }
-  
+
       navigate(-1);
     } catch (err) {
       console.error("Failed to end call session:", err);
       navigate(-1);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
       <p className="mb-4 text-sm text-zinc-400">Status: {status}</p>
@@ -301,21 +294,23 @@ const endCall = async () => {
             playsInline
             className="w-64 h-40 bg-zinc-900 rounded-xl"
           />
-        <button
+          <button
             onClick={toggleMic}
             className="mt-4 px-4 py-2 bg-blue-600 rounded-lg"
           >
-            {mic
-              ? "Mic ON"
-              : "Mic OFF"}
-          </button> 
-<div className="mt-4 bg-zinc-800 p-3 rounded-lg w-80 text-sm">
-  <p className="text-zinc-400 mb-1">Live Transcription:</p>
-  <p>{transcript}</p>
-</div>
+            {mic ? "Mic ON" : "Mic OFF"}
+          </button>
+          <button
+            onClick={toggleVideo}
+            className="mt-4 px-4 py-2 bg-purple-600 rounded-lg"
+          >
+            {videoEnabled ? "Video ON" : "Video OFF"}
+          </button>
 
-
-          
+          <div className="mt-4 bg-zinc-800 p-3 rounded-lg w-80 text-sm">
+            <p className="text-zinc-400 mb-1">Live Transcription:</p>
+            <p>{transcript}</p>
+          </div>
         </div>
 
         <div>
@@ -340,4 +335,3 @@ const endCall = async () => {
 };
 
 export default Video;
-
