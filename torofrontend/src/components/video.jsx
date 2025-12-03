@@ -21,6 +21,8 @@ const Video = () => {
   const { remoteId, role, callId } = location.state || {}; // role: "caller" on user side
   const { expert } = useSelector((state) => state.expert); // adjust to your store
 
+  console.log(callId);    //undefined
+
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -34,11 +36,37 @@ const Video = () => {
 
   const [transcript, setTranscript] = useState("");
 
+  // const { startListening, stopListening, isListening } = useSpeechRecognition(
+  //   (text) => {
+  //     setTranscript(text);
+  //   }
+  // );
+
   const { startListening, stopListening, isListening } = useSpeechRecognition(
-    (text) => {
-      setTranscript(text);
+
+    
+    async (finalText) => {
+      setTranscript(finalText); // show live
+
+    console.log("calliD IN USESPEECH HOOK",callId);
+   
+
+    try {
+      await axios.post("http://localhost:3000/call/transcript/add-chunk", {
+        callId,
+        speaker: role,   // "caller" or "expert"
+        text: finalText,
+        language: "en-US",
+        startedAt: new Date(),
+        endedAt: new Date(),
+      });
+    } catch (err) {
+      console.error("Failed to save transcript:", err);
     }
-  );
+  }
+);
+
+
 
   const startLocalStream = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -101,7 +129,7 @@ const Video = () => {
     peerRef.current = p;
   };
 
-  console.log(remoteId, role, expert?.expertId);
+  // console.log(remoteId, role, expert?.expertId);
 
   useEffect(() => {
     if (!remoteId || !role || !expert?.expertId) {

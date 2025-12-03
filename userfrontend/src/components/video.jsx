@@ -18,15 +18,36 @@ const Video = () => {
   const navigate = useNavigate();
   const [transcript, setTranscript] = useState("");
 
+
+  const { remoteId, role, callId } = location.state || {}; // role: "caller" on user side
+  const { user } = useSelector((state) => state.user); // adjust to your store
+  
   const { startListening, stopListening, isListening } = useSpeechRecognition(
-    (text) => {
-      setTranscript(text);
+
+    
+      async (finalText) => {
+        setTranscript(finalText); // show live
+
+  
+     
+  
+      try {
+        await axios.post("http://localhost:3000/call/transcript/add-chunk", {
+          callId,
+          speaker: role,   // "caller" or "expert"
+          text: finalText,
+          language: "en-US",
+          startedAt: new Date(),
+          endedAt: new Date(),
+        });
+      } catch (err) {
+        console.error("Failed to save transcript:", err);
+      }
     }
   );
 
   // remoteId = expert MongoDB _id
-  const { remoteId, role, callId } = location.state || {}; // role: "caller" on user side
-  const { user } = useSelector((state) => state.user); // adjust to your store
+
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);

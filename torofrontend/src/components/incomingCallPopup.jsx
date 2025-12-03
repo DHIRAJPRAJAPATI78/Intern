@@ -8,12 +8,16 @@ export default function IncomingCallPopup() {
   const [incoming, setIncoming] = useState(null); // { from, callerName, callId }
   const navigate = useNavigate();
   const { expert } = useSelector((state) => state.expert); 
+  const [incomingCallId,setIncomingCallId] = useState(null);
+
 
   useEffect(() => {
     const handleIncoming = ({ from, callerName , callId }) => {
         //from user mongo id
-      console.log("incoming-call:", from, callerName, callId);
+      console.log("incoming-call:", from, callerName, callId);   //callId comes here
+     
       setIncoming({ from, callerName, callId });
+      setIncomingCallId(callId);
     };
 
     socket.on("incoming-call", handleIncoming);
@@ -26,34 +30,38 @@ export default function IncomingCallPopup() {
 
 
 
-
+console.log(incomingCallId);    //callid aa gaya
   const handleAccept = () => {
     if (!incoming) return;
 
+    console.log("first")
     // 🔹 tell backend: I accepted the call
     socket.emit("accept-call", {
       to: incoming.from,       // caller socket id            //user mongo id
       from:expert?.expertId,          // expert socket id            //expert socket id   //this line is changed
-      callId:incoming.callId
+      callId:incomingCallId
     });
 
     // 🔹 go to Video page as EXPERT
-    console.log("incoming from: ",incoming.from);
+    console.log("incoming callId: ",incomingCallId);    //undefined 
+  
     navigate("/video", {
       state: {
         remoteId: incoming.from,
         role: "expert",
-        callId: incoming.callId
+        callId:  incomingCallId
       },
     });
 
     setIncoming(null);
   };
-  console.log("incoming compo")
+
+  console.log("incoming componet");
 
 
     const handleDecline = () => {
     setIncoming(null);
+    setIncomingCallId(null);
     // optionally emit "call-declined"
   };
 
