@@ -13,7 +13,7 @@ import ChangePassword from "./components/auth/ChangePassword";
 
 
 import ProtectedRoute from "./routes/protectedRoutes";
-import About from "./pages/about";
+import About from "./pages/About";
 import Booking from "./pages/Booking";
 import TarotCard from "./pages/TarotCard";
 import Horoscope from "./pages/Horoscope";
