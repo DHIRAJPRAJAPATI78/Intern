@@ -32,7 +32,7 @@ const Video = () => {
      
   
       try {
-        await axios.post("http://localhost:3000/call/transcript/add-chunk", {
+        await axios.post("https://torobackend-8kmx.onrender.com/call/transcript/add-chunk", {
           callId,
           speaker: role,   // "caller" or "expert"
           text: finalText,
@@ -245,7 +245,7 @@ const Video = () => {
       // if you passed callId in location.state
       if (callId) {
         await axios.put(
-          "http://localhost:3000/call/end",
+          "https://torobackend-8kmx.onrender.com/call/end",
           {
             callId,
             endReason: role === "caller" ? "user-ended" : "expert-ended",

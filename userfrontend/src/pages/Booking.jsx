@@ -19,7 +19,7 @@ const {user }= useSelector( (store) => store.user)
       setError("");
 
       // 🔁 Adjust URL according to your backend route
-      const res = await axios.get("http://localhost:3000/expert/allexperts");
+      const res = await axios.get("https://torobackend-8kmx.onrender.com/expert/allexperts");
       setExperts(res.data?.experts || []);
     } catch (err) {
       console.error("Error fetching experts:", err);
@@ -108,7 +108,7 @@ const {user }= useSelector( (store) => store.user)
       console.log("expertId:",expertId);
       console.log("userId:",user?._id);
       const res = await axios.post(
-        "http://localhost:3000/call/start",
+        "https://torobackend-8kmx.onrender.com/call/start",
         {
           expertId,
           userId: user?._id, // optional if you don't have auth middleware

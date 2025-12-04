@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:3000/user/auth",
+  baseURL: "https://torobackend-8kmx.onrender.com/user/auth",
   withCredentials: true,
 });
 
